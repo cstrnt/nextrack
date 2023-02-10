@@ -1,0 +1,8 @@
+-- CreateTable
+CREATE TABLE "Vote" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "voterIpHash" TEXT NOT NULL,
+    "songWishId" TEXT NOT NULL,
+    CONSTRAINT "Vote_songWishId_fkey" FOREIGN KEY ("songWishId") REFERENCES "SongWish" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+);

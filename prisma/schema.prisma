@@ -1,0 +1,94 @@
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+model Account {
+    id                String  @id @default(cuid())
+    userId            String
+    type              String
+    provider          String
+    providerAccountId String
+    refresh_token     String?
+    access_token      String?
+    expires_in        Int?
+    token_type        String?
+    scope             String?
+    id_token          String?
+    session_state     String?
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@unique([provider, providerAccountId])
+}
+
+model Session {
+    id           String   @id @default(cuid())
+    sessionToken String   @unique
+    userId       String
+    expires      DateTime
+    user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+    id            String    @id @default(cuid())
+    name          String?
+    email         String?   @unique
+    emailVerified DateTime?
+    image         String?
+    username      String?   @unique
+
+    title             String?
+    isAcceptingWishes Boolean @default(false)
+
+    accounts Account[]
+    sessions Session[]
+
+    BlockList  BlockList[]
+    SongWishes SongWish[]
+}
+
+model VerificationToken {
+    identifier String
+    token      String   @unique
+    expires    DateTime
+
+    @@unique([identifier, token])
+}
+
+model SongWish {
+    id    String  @id @default(cuid())
+    title String
+    link  String?
+
+    playedAt        DateTime?
+    createdAt       DateTime  @default(now())
+    submitterIpHash String
+
+    user   User   @relation(fields: [userId], references: [id])
+    userId String
+    votes  Vote[]
+}
+
+model BlockList {
+    id        String   @id @default(cuid())
+    ipHash    String   @unique
+    createdAt DateTime @default(now())
+    user      User     @relation(fields: [userId], references: [id])
+    userId    String
+}
+
+model Vote {
+    id          String   @id @default(cuid())
+    createdAt   DateTime @default(now())
+    voterIpHash String
+
+    songWish   SongWish @relation(fields: [songWishId], references: [id])
+    songWishId String
+
+    @@unique([songWishId, voterIpHash])
+}
