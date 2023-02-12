@@ -3,9 +3,22 @@
 	import { page } from '$app/stores';
 	import type { ActionData, PageData } from './$types';
 	import { ArrowLeftIcon } from '@rgossiaux/svelte-heroicons/solid';
+	import { toastStore, type ToastSettings } from '@skeletonlabs/skeleton';
 
 	export let data: PageData;
 	export let form: ActionData;
+
+	$: {
+		if (form?.message) {
+			const t: ToastSettings = {
+				message: form.message,
+				preset: 'primary',
+				autohide: true,
+				timeout: 2000
+			};
+			toastStore.trigger(t);
+		}
+	}
 </script>
 
 <a

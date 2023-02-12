@@ -1,8 +1,13 @@
 import { UserService } from '$lib/server/UserService';
 import { RequestService } from '$lib/server/RequestService';
-import { error, fail, redirect } from '@sveltejs/kit';
+import { fail, redirect } from '@sveltejs/kit';
 import { z } from 'zod';
 import type { PageServerLoadEvent, Actions } from './$types';
+import { NODE_ENV } from '$env/static/private';
+import { Ratelimit } from '@upstash/ratelimit';
+import { Redis } from '@upstash/redis';
+
+const baseCache = new Map();
 
 const ALLOWED_DOMAINS = ['youtube.com', 'youtu.be', 'open.spotify.com', 'soundcloud.com'].flatMap(
 	(domain) => [domain, `www.${domain}`]
@@ -25,6 +30,23 @@ export const actions: Actions = {
 	default: async ({ request, params, getClientAddress }) => {
 		const userHandle = params.userHandle.toLowerCase();
 		const formData = await request.formData();
+
+		// we don't want to rate limit in dev
+		if (NODE_ENV === 'production') {
+			const ratelimit = new Ratelimit({
+				ephemeralCache: baseCache,
+				redis: Redis.fromEnv(),
+				limiter: Ratelimit.slidingWindow(1, '10 s')
+			});
+
+			const canVote = await ratelimit.limit(getClientAddress());
+
+			if (!canVote) {
+				return fail(429, {
+					message: 'You can only request a song once every 10 seconds.'
+				});
+			}
+		}
 
 		const validationResult = addWishSchema.safeParse(Object.fromEntries(formData.entries()));
 		if (!validationResult.success) {

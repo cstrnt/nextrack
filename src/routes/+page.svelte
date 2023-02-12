@@ -4,21 +4,11 @@
 	import { Avatar } from '@skeletonlabs/skeleton';
 </script>
 
-<h1>SvelteKit Auth Example</h1>
-<p>
-	{#if $page.data.session}
-		{#if $page.data.session.user?.image}
-			<Avatar src={$page.data.session.user.image} />
-		{/if}
-		<span class="signedInText">
-			<small>Signed in as</small><br />
-			<strong>{$page.data.session.user?.name ?? 'User'}</strong>
-		</span>
-		<button on:click={() => signOut()} class="btn variant-filled-primary">Sign out</button>
-	{:else}
-		<span class="notSignedInText">You are not signed in</span>
-		<button class="btn variant-filled-primary" on:click={() => signIn('google')}
-			>Sign In with GitHub</button
-		>
-	{/if}
+<h1 class="font-bold">Welcome to NexTrack</h1>
+<p class="mt-4">
+	NexTrack is an online Platform for Musicians, DJs and Radio Stations that want to be able to
+	easily get song requests.
+	<br />
+	You can see an example here
 </p>
+<iframe src={'/djr8der'} height="600" width="500" />
