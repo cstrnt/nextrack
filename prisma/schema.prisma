@@ -42,14 +42,13 @@ model User {
     image         String?
     username      String?   @unique
 
-    title             String?
-    isAcceptingWishes Boolean @default(false)
+    title               String?
+    isAcceptingRequests Boolean   @default(false)
+    accounts            Account[]
+    sessions            Session[]
 
-    accounts Account[]
-    sessions Session[]
-
-    BlockList  BlockList[]
-    SongWishes SongWish[]
+    blockedUsers BlockList[]
+    songRequests SongRequest[]
 }
 
 model VerificationToken {
@@ -60,7 +59,7 @@ model VerificationToken {
     @@unique([identifier, token])
 }
 
-model SongWish {
+model SongRequest {
     id    String  @id @default(cuid())
     title String
     link  String?
@@ -87,8 +86,8 @@ model Vote {
     createdAt   DateTime @default(now())
     voterIpHash String
 
-    songWish   SongWish @relation(fields: [songWishId], references: [id])
-    songWishId String
+    songRequest   SongRequest @relation(fields: [songRequestId], references: [id])
+    songRequestId String
 
-    @@unique([songWishId, voterIpHash])
+    @@unique([songRequestId, voterIpHash])
 }

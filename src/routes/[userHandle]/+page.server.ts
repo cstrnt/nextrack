@@ -1,34 +1,37 @@
-import { error } from '@sveltejs/kit';
-import { UserService } from '../../server/UserService';
+import { error, fail } from '@sveltejs/kit';
+import { UserService } from '$lib/server/UserService';
 import type { Actions, PageServerLoadEvent } from './$types';
-import { z } from 'zod';
-import { WishService } from '../../server/WishService';
+import { RequestService, type SongRequestDTO } from '$lib/server/RequestService';
+import { Ratelimit } from '@upstash/ratelimit';
+import { Redis } from '@upstash/redis';
+import { NODE_ENV } from '$env/static/private';
 
-const addWishSchema = z.object({
-	song: z.string(),
-	artist: z.string(),
-	link: z.string().optional()
-});
+const baseCache = new Map();
 
 export async function load({ params, getClientAddress }: PageServerLoadEvent) {
-	const user = await UserService.getUserByHandle(params.userHandle.toLowerCase());
+	const user = await UserService.getUserByHandle(params.userHandle);
 
 	if (user) {
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		const { email, emailVerified, name, SongWishes, ...rest } = user;
-		console.log({
-			hip: WishService.hashIp(getClientAddress()),
-			SongWishes
-		});
+		const { email, emailVerified, name, songRequests, ...rest } = user;
+
 		return {
 			...rest,
-			wishes: SongWishes.map((wish) => ({
-				...wish,
-				votes: wish.votes.length,
-				hasUpvoted: wish.votes.some(
-					(vote) => vote.songWishId === WishService.hashIp(getClientAddress())
+			requests: songRequests
+				.filter((request) => request.playedAt == null)
+				.map(
+					(request) =>
+						({
+							id: request.id,
+							createdAt: request.createdAt,
+							title: request.title,
+							link: request.link,
+							votes: request.votes.length,
+							hasUpvoted: request.votes.some(
+								(vote) => vote.voterIpHash === RequestService.hashIp(getClientAddress())
+							)
+						} satisfies SongRequestDTO)
 				)
-			}))
 		};
 	}
 
@@ -36,32 +39,32 @@ export async function load({ params, getClientAddress }: PageServerLoadEvent) {
 }
 
 export const actions: Actions = {
-	createWish: async ({ request, params, getClientAddress }) => {
-		const userHandle = params.userHandle.toLowerCase();
-		const formData = await request.formData();
-
-		const validationResult = addWishSchema.safeParse(Object.fromEntries(formData.entries()));
-		if (!validationResult.success) {
-			throw error(400, 'Invalid data');
-		}
-		const { artist, song, link } = validationResult.data;
-		await WishService.addWish({
-			ip: getClientAddress(),
-			link: link || null,
-			title: `${artist} - ${song}`,
-			userHandle
-		});
-		return { success: true };
-	},
 	vote: async ({ request, getClientAddress }) => {
-		const wishId = (await request.formData()).get('wishId');
-		if (typeof wishId !== 'string') {
+		const requestId = (await request.formData()).get('requestId');
+		// we don't want to rate limit in dev
+		if (NODE_ENV === 'production') {
+			const ratelimit = new Ratelimit({
+				ephemeralCache: baseCache,
+				redis: Redis.fromEnv(),
+				limiter: Ratelimit.slidingWindow(3, '10 s')
+			});
+
+			const canVote = await ratelimit.limit(getClientAddress() + requestId);
+
+			if (!canVote) {
+				return fail(429, {
+					message: "Please don't spam the vote button"
+				});
+			}
+		}
+
+		if (typeof requestId !== 'string') {
 			throw error(400, 'Invalid data');
 		}
 
-		const hasVoted = await WishService.voteOnWish({
+		const hasVoted = await RequestService.voteOnRequest({
 			ip: getClientAddress(),
-			wishId
+			requestId
 		});
 
 		return { hasVoted };
