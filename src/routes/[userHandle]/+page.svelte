@@ -39,14 +39,10 @@
 			data.requests = data.requests.concat(wish);
 		},
 		'mark-as-played': ({ requestId }) => {
-			const wishIndex = data.requests.findIndex((request) => request.id === requestId);
-			if (wishIndex === -1) return;
-			data.requests.slice(wishIndex, 1);
+			data.requests = data.requests.filter((request) => request.id !== requestId);
 		},
 		'remove-request': ({ requestId }) => {
-			const wishIndex = data.requests.findIndex((request) => request.id === requestId);
-			if (wishIndex === -1) return;
-			data.requests.slice(wishIndex, 1);
+			data.requests = data.requests.filter((request) => request.id !== requestId);
 		}
 	});
 
