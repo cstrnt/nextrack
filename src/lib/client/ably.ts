@@ -7,7 +7,9 @@ const ably = new Ably.Realtime.Promise(PUBLIC_ABLY_CLIENT_KEY);
 
 export enum LIVE_EVENT {
 	VOTE = 'vote',
-	ADD_REQUEST = 'add-request'
+	ADD_REQUEST = 'add-request',
+	MARK_AS_PLAYED = 'mark-as-played',
+	REMOVE_REQUEST = 'remove-request'
 }
 
 export type VotePayload = {
@@ -20,6 +22,8 @@ export type AddRequestPayload = SongRequestDTO;
 type Handlers = {
 	[LIVE_EVENT.VOTE]: (payload: VotePayload) => void;
 	[LIVE_EVENT.ADD_REQUEST]: (payload: AddRequestPayload) => void;
+	[LIVE_EVENT.MARK_AS_PLAYED]: (payload: { requestId: string }) => void;
+	[LIVE_EVENT.REMOVE_REQUEST]: (payload: { requestId: string }) => void;
 };
 
 export async function listenToEvents(userHandle: string, handlers: Handlers) {

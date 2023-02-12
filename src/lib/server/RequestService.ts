@@ -166,15 +166,16 @@ export abstract class RequestService {
 		return true;
 	}
 
-	static async markAsPlayed(requestId: string, userId: string) {
+	static async markAsPlayed(requestId: string, userName: string) {
 		const wish = await prisma.songRequest.findFirst({
 			where: {
 				id: requestId,
-				userId
+				user: { username: userName }
 			}
 		});
 		if (!wish) throw new Error('Invalid Wish');
 
+		await LiveUpdateService.markAsPlayed({ handle: userName, requestId });
 		return prisma.songRequest.update({
 			where: {
 				id: requestId
@@ -184,11 +185,11 @@ export abstract class RequestService {
 			}
 		});
 	}
-	static async markAsUnplayed(requestId: string, userId: string) {
+	static async markAsUnplayed(requestId: string, userName: string) {
 		const wish = await prisma.songRequest.findFirst({
 			where: {
 				id: requestId,
-				userId
+				user: { username: userName }
 			}
 		});
 		if (!wish) throw new Error('Invalid Wish');
@@ -204,18 +205,21 @@ export abstract class RequestService {
 	}
 	static async deleteRequest({
 		requestId,
-		shouldBlock
+		shouldBlock,
+		userName
 	}: {
 		requestId: string;
-
+		userName: string;
 		shouldBlock?: boolean;
 	}) {
-		const songRequest = await prisma.songRequest.findUnique({
+		const songRequest = await prisma.songRequest.findFirst({
 			where: {
-				id: requestId
+				id: requestId,
+				user: { username: userName }
 			}
 		});
 		if (!songRequest) throw new Error('Invalid Request');
+		await LiveUpdateService.removeRequest({ handle: userName, requestId });
 		await prisma.$transaction([
 			prisma.vote.deleteMany({
 				where: {

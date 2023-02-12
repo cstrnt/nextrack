@@ -14,4 +14,12 @@ export abstract class LiveUpdateService {
 		const channel = ably.channels.get(handle);
 		return channel.publish(LIVE_EVENT.ADD_REQUEST, songWish);
 	}
+	static markAsPlayed({ handle, requestId }: { handle: string; requestId: string }) {
+		const channel = ably.channels.get(handle);
+		return channel.publish(LIVE_EVENT.MARK_AS_PLAYED, { requestId });
+	}
+	static removeRequest({ handle, requestId }: { handle: string; requestId: string }) {
+		const channel = ably.channels.get(handle);
+		return channel.publish(LIVE_EVENT.REMOVE_REQUEST, { requestId });
+	}
 }

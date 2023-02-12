@@ -40,7 +40,7 @@ export const actions: Actions = {
 			throw redirect(302, '/login');
 		}
 		const user = await UserService.getProfileData((session.user as User).id);
-		if (!user) {
+		if (!user || !user.username) {
 			throw redirect(302, '/login');
 		}
 		const formData = await request.formData();
@@ -48,7 +48,7 @@ export const actions: Actions = {
 		if (typeof requestId !== 'string') {
 			throw error(500, 'Invalid request');
 		}
-		await RequestService.markAsPlayed(requestId, user.id);
+		await RequestService.markAsPlayed(requestId, user.username);
 	},
 	markAsUnplayed: async ({ request }) => {
 		const session = await getSession(request, authConfig);
@@ -56,7 +56,7 @@ export const actions: Actions = {
 			throw redirect(302, '/login');
 		}
 		const user = await UserService.getProfileData((session.user as User).id);
-		if (!user) {
+		if (!user || !user.username) {
 			throw redirect(302, '/login');
 		}
 		const formData = await request.formData();
@@ -64,7 +64,7 @@ export const actions: Actions = {
 		if (typeof requestId !== 'string') {
 			throw error(500, 'Invalid request');
 		}
-		await RequestService.markAsUnplayed(requestId, user.id);
+		await RequestService.markAsUnplayed(requestId, user.username);
 	},
 	remove: async ({ request }) => {
 		const session = await getSession(request, authConfig);
@@ -72,7 +72,7 @@ export const actions: Actions = {
 			throw redirect(302, '/login');
 		}
 		const user = await UserService.getProfileData((session.user as User).id);
-		if (!user) {
+		if (!user || !user.username) {
 			throw redirect(302, '/login');
 		}
 		const formData = await request.formData();
@@ -83,6 +83,10 @@ export const actions: Actions = {
 			throw error(500, 'Invalid request');
 		}
 
-		await RequestService.deleteRequest({ requestId, shouldBlock: !!shouldBlock });
+		await RequestService.deleteRequest({
+			requestId,
+			shouldBlock: !!shouldBlock,
+			userName: user.username
+		});
 	}
 };
