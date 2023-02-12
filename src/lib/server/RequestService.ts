@@ -4,8 +4,7 @@ import crypto from 'node:crypto';
 import { LiveUpdateService } from './ably';
 
 export type SongRequestDTO = Pick<SongRequest, 'id' | 'createdAt' | 'title' | 'link'> & {
-	votes: number;
-	hasUpvoted: boolean;
+	votes: Array<string>;
 };
 
 export abstract class RequestService {
@@ -75,14 +74,16 @@ export abstract class RequestService {
 			throw new Error('You have been blocked from making wishes');
 		}
 
+		const hashedUserIp = RequestService.hashIp(ip);
+
 		const songRequest = await prisma.songRequest.create({
 			data: {
-				submitterIpHash: RequestService.hashIp(ip),
+				submitterIpHash: hashedUserIp,
 				link,
 				title,
 				votes: {
 					create: {
-						voterIpHash: RequestService.hashIp(ip)
+						voterIpHash: hashedUserIp
 					}
 				},
 				user: {
@@ -98,8 +99,7 @@ export abstract class RequestService {
 			id: songRequest.id,
 			link: songRequest.link,
 			title: songRequest.title,
-			votes: 1,
-			hasUpvoted: false
+			votes: [hashedUserIp]
 		});
 		return songRequest;
 	}
@@ -186,13 +186,25 @@ export abstract class RequestService {
 		});
 	}
 	static async markAsUnplayed(requestId: string, userName: string) {
-		const wish = await prisma.songRequest.findFirst({
+		const request = await prisma.songRequest.findFirst({
 			where: {
 				id: requestId,
 				user: { username: userName }
+			},
+			include: {
+				votes: true
 			}
 		});
-		if (!wish) throw new Error('Invalid Wish');
+		if (!request) throw new Error('Invalid Wish');
+
+		await LiveUpdateService.publishWish({
+			handle: userName,
+			createdAt: request.createdAt,
+			id: request.id,
+			link: request.link,
+			title: request.title,
+			votes: request.votes.map((v) => v.voterIpHash)
+		});
 
 		return prisma.songRequest.update({
 			where: {

@@ -27,16 +27,16 @@
 
 	listenToEvents($page.params.userHandle, {
 		vote: ({ action, requestId }) => {
-			const wishIndex = data.requests.findIndex((request) => request.id === requestId);
-			if (wishIndex === -1) return;
+			const requestIndex = data.requests.findIndex((request) => request.id === requestId);
+			if (requestIndex === -1) return;
 
-			data.requests[wishIndex].votes =
+			data.requests[requestIndex].votes =
 				action === 'upvote'
-					? data.requests[wishIndex].votes + 1
-					: data.requests[wishIndex].votes - 1;
+					? data.requests[requestIndex].votes.concat(data.userId)
+					: data.requests[requestIndex].votes.filter((id) => id !== data.userId);
 		},
-		'add-request': (wish) => {
-			data.requests = data.requests.concat(wish);
+		'add-request': (request) => {
+			data.requests = data.requests.concat(request);
 		},
 		'mark-as-played': ({ requestId }) => {
 			data.requests = data.requests.filter((request) => request.id !== requestId);
@@ -53,7 +53,7 @@
 	});
 
 	$: wishes = [...data.requests]
-		.sort((a, b) => b.votes - a.votes)
+		.sort((a, b) => b.votes.length - a.votes.length)
 		.slice(0, $isStreamView ? 3 : data.requests.length);
 </script>
 
@@ -83,7 +83,7 @@
 		>
 			{#each wishes as wish (wish.id)}
 				<div class="w-full" animate:flip in:fade>
-					<Wish {wish} isStream={$isStreamView} />
+					<Wish {wish} isStream={$isStreamView} isUpvoted={wish.votes.includes(data.userId)} />
 				</div>
 			{/each}
 		</ul>

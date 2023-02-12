@@ -17,6 +17,7 @@ export async function load({ params, getClientAddress }: PageServerLoadEvent) {
 
 		return {
 			...rest,
+			userId: RequestService.hashIp(getClientAddress()),
 			requests: songRequests
 				.filter((request) => request.playedAt == null)
 				.map(
@@ -26,10 +27,7 @@ export async function load({ params, getClientAddress }: PageServerLoadEvent) {
 							createdAt: request.createdAt,
 							title: request.title,
 							link: request.link,
-							votes: request.votes.length,
-							hasUpvoted: request.votes.some(
-								(vote) => vote.voterIpHash === RequestService.hashIp(getClientAddress())
-							)
+							votes: request.votes.map((vote) => vote.voterIpHash)
 						} satisfies SongRequestDTO)
 				)
 		};

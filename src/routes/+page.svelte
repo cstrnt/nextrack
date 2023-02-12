@@ -11,4 +11,4 @@
 	<br />
 	You can see an example here
 </p>
-<iframe src={'/djr8der'} height="600" width="500" />
+<iframe src={'/djr8der'} height="600" width="500" title="Preview" />
