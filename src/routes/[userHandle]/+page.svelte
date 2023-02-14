@@ -9,6 +9,7 @@
 	import type { ActionData, PageData } from './$types';
 	import { isStreamView } from '$lib/client/helpers';
 	import { get } from 'svelte/store';
+	import QrCode from '$lib/components/QrCode.svelte';
 
 	export let data: PageData;
 	export let form: ActionData;
@@ -65,6 +66,7 @@
 		border="border-4 border-surface-500"
 		class="mt-8"
 	/>
+	<QrCode qrCodeData={`https://nextrack.vercel.app/${data.username}`} />
 	<h1 class="text-xl font-bold">This is: {data.username?.toUpperCase()}</h1>
 {/if}
 {#if !data.isAcceptingRequests}
