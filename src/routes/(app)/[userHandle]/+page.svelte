@@ -9,6 +9,7 @@
 	import type { ActionData, PageData } from './$types';
 	import { isStreamView } from '$lib/client/helpers';
 	import { get } from 'svelte/store';
+	import UserHeader from '$lib/components/UserHeader.svelte';
 
 	export let data: PageData;
 	export let form: ActionData;
@@ -58,14 +59,7 @@
 </script>
 
 {#if !$isStreamView}
-	<Avatar
-		src={data.image ?? undefined}
-		rounded="rounded-full"
-		width="48"
-		border="border-4 border-surface-500"
-		class="mt-8"
-	/>
-	<h1 class="text-xl font-bold">This is: {data.username?.toUpperCase()}</h1>
+	<UserHeader image={data.image ?? undefined} username={data.username ?? undefined} />
 {/if}
 {#if !data.isAcceptingRequests}
 	<p>Not accepting wishes</p>
@@ -77,7 +71,7 @@
 	{/if}
 	{#if wishes.length}
 		<ul
-			class="space-y-6 w-full pt-3 {$isStreamView
+			class="space-y-6 w-full h-full overflow-y-auto pt-3 {$isStreamView
 				? 'absolute top-1/2 transform -translate-y-1/2'
 				: 'max-w-xl'}"
 		>

@@ -3,7 +3,7 @@ import { RequestService } from '$lib/server/RequestService';
 import { getSession } from '@auth/sveltekit';
 import type { User } from '@prisma/client';
 import { error, redirect } from '@sveltejs/kit';
-import { authConfig } from '../../hooks.server';
+import { authConfig } from '../../../hooks.server';
 import type { Actions, PageServerLoadEvent } from './$types';
 
 export async function load({ request }: PageServerLoadEvent) {

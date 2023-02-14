@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
+	import UserHeader from '$lib/components/UserHeader.svelte';
 	import { CheckIcon, TrashIcon, XCircleIcon } from '@rgossiaux/svelte-heroicons/outline';
 	import { ArrowLeftIcon } from '@rgossiaux/svelte-heroicons/solid';
-	import { modalStore, Tab, TabGroup, type ModalSettings } from '@skeletonlabs/skeleton';
+	import { Avatar, modalStore, Tab, TabGroup, type ModalSettings } from '@skeletonlabs/skeleton';
 	import { fade } from 'svelte/transition';
 	import type { PageData } from './$types';
 
@@ -41,7 +42,7 @@
 	$: unplayedSongs = data.user.songRequests.filter((song) => song.playedAt == null);
 </script>
 
-<h1 class="mt-6">Hello, {data.user.username}</h1>
+<UserHeader image={data.user.image ?? undefined} username={data.user.username ?? undefined} />
 <form
 	method="POST"
 	action="?/isAcceptingRequests"
@@ -63,14 +64,14 @@
 	</label>
 </form>
 
-<h2>Your Requests</h2>
+<h2 class="text-left w-full">Your Requests</h2>
 <TabGroup class="w-full">
 	<Tab bind:group={tabSet} name="Unplayed Songs" value="unplayed" rounded="rounded-t-md"
 		>Unplayed</Tab
 	>
 	<Tab bind:group={tabSet} name="Played Songs" value="played" rounded="rounded-t-md">Played</Tab>
 	<svelte:fragment slot="panel">
-		<ul class="space-y-4">
+		<ul class="space-y-4 h-full overflow-y-auto">
 			{#each tabSet === 'played' ? playedSongs : unplayedSongs as request (request.id)}
 				<div
 					class="card variant-glass-surface p-4 flex justify-between w-full items-center rounded-lg"
